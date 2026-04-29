@@ -4,6 +4,8 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"io"
+	"os"
 )
 
 type AuditEntry struct {
@@ -27,4 +29,21 @@ func computeEntryHash(entry AuditEntry) string {
 	hash := sha256.Sum256(data)
 
 	return hex.EncodeToString(hash[:])
+}
+
+func hashFile(filepath string) (string, error) {
+	content, err := os.Open(filepath)
+	if err != nil {
+		return "", err
+	}
+	defer content.Close()
+
+	hasher := sha256.New()
+	_, err = io.Copy(hasher, content)
+	if err != nil {
+		return "", err
+	}
+
+	bytes := hasher.Sum(nil)
+	return hex.EncodeToString(bytes), nil
 }
